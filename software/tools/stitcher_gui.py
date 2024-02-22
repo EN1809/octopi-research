@@ -1,17 +1,16 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit, QFileDialog, QMessageBox
 from functools import partial
 from script_stitch_slide import stitch_slide_from_path
-
-
-import os
-os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH")
+from datetime import datetime
+import resource
 
 class StitcherGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Slide Stitcher")
-        self.setGeometry(100, 100, 400, 300)
+        self.setGeometry(100, 100, 400, 350)
 
         self.slide_path_label = QLabel("Slide Path:", self)
         self.slide_path_label.setGeometry(20, 20, 100, 30)
@@ -33,6 +32,7 @@ class StitcherGUI(QMainWindow):
             self.slide_path_edit.setText(folder_path)
 
     def stitch_slide(self):
+        start_time = datetime.now()
         slide_path = self.slide_path_edit.text().strip()
         if not slide_path:
             QMessageBox.critical(self, "Error", "Please select slide folder.")
@@ -44,10 +44,21 @@ class StitcherGUI(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
 
+        end_time = datetime.now()
+        elapsed_time = end_time - start_time
+        memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        with open('output.txt', 'a') as f:
+            f.write(f"Time elapsed: {elapsed_time}\n")
+            f.write(f"Memory usage: {memory_usage} bytes\n")
+
+    def closeEvent(self, event):
+        event.accept()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = StitcherGUI()
     window.show()
     sys.exit(app.exec_())
+
 
